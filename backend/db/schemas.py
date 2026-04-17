@@ -1,4 +1,4 @@
-from pydantic import BaseModel , EmailStr
+from pydantic import BaseModel , EmailStr , Field
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
@@ -20,7 +20,7 @@ class DepartmentResponse(BaseModel):
     id:UUID
     name:str
     team_email:EmailStr
-    created_at=datetime
+    created_at:datetime
 
     class config:
         from_attributes = True
@@ -30,7 +30,7 @@ class DepartmentResponse(BaseModel):
 class UserRegister(BaseModel):
     name: str
     email: EmailStr
-    password: str
+    password: str= Field(..., min_length=8,max_length=20)
 
 class UserLogin(BaseModel):
     email: EmailStr

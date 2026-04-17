@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routers import auth
 
 app = FastAPI(
     title= "Customer support Agent API",
@@ -16,7 +17,8 @@ app.add_middleware(
     allow_headers= ["*"]
 )
 
- 
+app.include_router(auth.router)
+
 @app.get("/")
 def root():
     return {"message":"customer support agent API is running"}
