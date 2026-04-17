@@ -1,0 +1,70 @@
+from pydantic import BaseModel , EmailStr
+from typing import Optional
+from datetime import datetime
+from uuid import UUID
+
+#ROles Schemas
+
+class RoleResponse(BaseModel):
+    id: UUID
+    name: str
+
+    class config:
+        from_attributes = True
+
+class DepartmentCreate(BaseModel):
+    name :str
+    team_email : EmailStr
+
+class DepartmentResponse(BaseModel):
+    id:UUID
+    name:str
+    team_email:EmailStr
+    created_at=datetime
+
+    class config:
+        from_attributes = True
+
+
+# User schemas 
+class UserRegister(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
+    id: UUID
+    name: str
+    email: str
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Executive schemas
+class ExecutiveLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class ExecutiveResponse(BaseModel):
+    id: UUID
+    name: str
+    email: str
+    department: DepartmentResponse
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+#Auth response 
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse | ExecutiveResponse
