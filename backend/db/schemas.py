@@ -12,19 +12,6 @@ class RoleResponse(BaseModel):
     class config:
         from_attributes = True
 
-class DepartmentCreate(BaseModel):
-    name :str
-    team_email : EmailStr
-
-class DepartmentResponse(BaseModel):
-    id:UUID
-    name:str
-    team_email:EmailStr
-    created_at:datetime
-
-    class config:
-        from_attributes = True
-
 
 # User schemas 
 class UserRegister(BaseModel):
@@ -56,7 +43,6 @@ class ExecutiveResponse(BaseModel):
     id: UUID
     name: str
     email: str
-    department: DepartmentResponse
     created_at: datetime
 
     class Config:

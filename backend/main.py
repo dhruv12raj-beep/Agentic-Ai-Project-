@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth
+from routers import auth , tickets , executive
 
 app = FastAPI(
     title= "Customer support Agent API",
@@ -8,7 +8,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# for sharing browser sequrity rule 
+# for sharing browser security rule 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -18,6 +18,9 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(tickets.router)
+app.include_router(executive.router)
+
 
 @app.get("/")
 def root():

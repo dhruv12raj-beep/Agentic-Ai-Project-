@@ -5,6 +5,7 @@ from db.postgres import get_db
 from db.pg_models import User, Executive, Role
 from db.schemas import UserRegister, UserLogin, ExecutiveLogin, TokenResponse, UserResponse, ExecutiveResponse
 from auth.auth_handler import hash_password, verify_password, create_access_token
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -35,7 +36,7 @@ async def register_customer(data: UserRegister, db: AsyncSession = Depends(get_d
 
 
 @router.post("/customer/login", response_model=TokenResponse)
-async def login_customer(data: UserLogin, db: AsyncSession = Depends(get_db)):
+async def login_customer(data: UserLogin,db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == data.email))
     user = result.scalar_one_or_none()
 

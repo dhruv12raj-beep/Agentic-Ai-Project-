@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import create_async_engine , AsyncSession
 from config import POSTGRES_URL
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-engine = create_async_engine(POSTGRES_URL, echo = True)
+engine = create_async_engine(POSTGRES_URL, pool_pre_ping= True, echo = True)
 
 AsyncSessionLocal = sessionmaker(
     bind=engine,

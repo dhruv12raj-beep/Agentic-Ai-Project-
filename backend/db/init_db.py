@@ -2,7 +2,7 @@ from sqlalchemy import text
 import asyncio
 import selectors
 from db.postgres import engine , Base
-from db.pg_models import Role , Department , User , Executive
+from db.pg_models import Role , User , Executive
 
 
 async def init():
@@ -11,5 +11,5 @@ async def init():
         await conn.run_sync(Base.metadata.create_all)
         print("all tables  dropped and created successfully ")
 
-if __name__== "__main__":
-    asyncio.run(init(),loop_factory=asyncio.SelectorEventLoop)
+asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+asyncio.run(init())

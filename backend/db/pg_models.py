@@ -15,16 +15,6 @@ class Role(Base):
 
 
 
-class Department(Base):
-    __tablename__ = "departments"
-    id = Column(UUID(as_uuid=True), primary_key = True , default= uuid.uuid4)
-    name = Column(String(100), unique = True , nullable=False)
-    team_email = Column(String(255), unique=True , nullable = False)
-    created_at = Column(DateTime(timezone=True), default=lambda:datetime.now(timezone.utc))
-
-    executives = relationship("Executive", back_populates="department")
-
-
 class User(Base):
     __tablename__= "users"
     id = Column(UUID(as_uuid=True), primary_key = True , default= uuid.uuid4)
@@ -44,8 +34,6 @@ class Executive(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    department_id = Column(UUID(as_uuid=True), ForeignKey("departments.id"), nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    department = relationship("Department", back_populates="executives")
