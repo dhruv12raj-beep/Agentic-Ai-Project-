@@ -35,12 +35,15 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          timeout: 300s
-          command_timeout: 30m
+          timeout: 600s
+          command_timeout: 60m
           script: |
-            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 746486152961.dkr.ecr.ap-south-1.amazonaws.com
+            cd /home/ubuntu
+            git clone https://github.com/dhruv12raj-beep/Agentic-Ai-Project-.git repo 2>/dev/null || (cd repo && git pull origin main)
+            cd /home/ubuntu/repo/backend
+            docker build -t support-backend:latest .
             cd /home/ubuntu/app
-            /usr/local/bin/docker-compose pull
+            sed -i 's|746486152961.dkr.ecr.ap-south-1.amazonaws.com/support-backend:latest|support-backend:latest|g' docker-compose.yml
             /usr/local/bin/docker-compose up -d --remove-orphans
             docker image prune -f
             echo "Deployed successfully"
