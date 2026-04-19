@@ -35,6 +35,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          timeout: 300s
+          command_timeout: 30m
           script: |
             aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 746486152961.dkr.ecr.ap-south-1.amazonaws.com
             cd /home/ubuntu/app
