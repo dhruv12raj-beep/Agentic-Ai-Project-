@@ -38,7 +38,7 @@ jobs:
           script: |
             aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 746486152961.dkr.ecr.ap-south-1.amazonaws.com
             cd /home/ubuntu/app
-            docker-compose pull
-            docker-compose up -d --remove-orphans
+            /usr/local/bin/docker-compose pull
+            /usr/local/bin/docker-compose up -d --remove-orphans
             docker image prune -f
             echo "Deployed successfully"
