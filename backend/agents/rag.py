@@ -6,7 +6,7 @@ from config import GROQ_API_KEY
 
 client = Groq(api_key=GROQ_API_KEY)
 
-EMBEDDING_MODEL = "nomic-embed-text-v1_5"  
+EMBEDDING_MODEL = "nomic-embed-text-v1.5"  
 
 Knowledge_Base = [
     "If a payment was deducted but the order failed, the amount is automatically refunded within 5-7 business days. Customer should check their bank statement.",
