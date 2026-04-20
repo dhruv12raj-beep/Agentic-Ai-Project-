@@ -59,3 +59,5 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           ECR_REPOSITORY_URI: ${{ secrets.ECR_REPOSITORY_URI }}
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}  
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}    

@@ -1,50 +1,70 @@
-import numpy as np
+import requests
+import os
 import faiss
-from groq import Groq
-from config import GROQ_API_KEY
+import numpy as np
+from openai import OpenAI
 
+# ── keys from environment (never hardcoded) ───────────────────────────────────
+HF_API_KEY   = os.environ["HF_API_KEY"]
+GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 
-client = Groq(api_key=GROQ_API_KEY)
+HF_MODEL_URL = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
 
-EMBEDDING_MODEL = "nomic-embed-text-v1.5"  
+groq_client = OpenAI(
+    api_key=GROQ_API_KEY,
+    base_url="https://api.groq.com/openai/v1"
+)
 
-Knowledge_Base = [
-    "If a payment was deducted but the order failed, the amount is automatically refunded within 5-7 business days. Customer should check their bank statement.",
-    "To reset a password, the customer should click 'Forgot Password' on the login page and follow the email instructions.",
-    "If the app is crashing on launch, the customer should clear the app cache or reinstall the latest version.",
-    "Orders can be cancelled within 30 minutes of placement. After that, cancellation is not possible.",
-    "For delivery delays beyond 7 days, the customer is eligible for a full refund or reorder at no extra charge.",
-    "Account suspension happens when suspicious activity is detected. Customer must verify identity via email to reactivate.",
-    "If a promo code is not working, it may have expired or already been used. Only one promo code is allowed per order.",
-    "Product return requests must be raised within 7 days of delivery. The item must be unused and in original packaging.",
-    "If the wrong item was delivered, the customer should raise a ticket with a photo. Replacement is dispatched within 2 days.",
-    "For billing disputes, the finance team requires the order ID and bank transaction reference to investigate.",
+KNOWLEDGE_BASE = [
+    "If a payment was deducted but the order failed, the amount is automatically refunded within 5-7 business days.",
+    "To reset a password, click 'Forgot Password' on the login page and follow the email instructions.",
+    "If the app is crashing on launch, clear the app cache or reinstall the latest version.",
+    "Orders can be cancelled within 30 minutes of placement.",
+    "For delivery delays beyond 7 days, the customer is eligible for a full refund or reorder.",
+    "Account suspension happens when suspicious activity is detected. Customer must verify identity via email.",
+    "If a promo code is not working, it may have expired or already been used.",
+    "Product return requests must be raised within 7 days of delivery.",
+    "If the wrong item was delivered, raise a ticket with a photo. Replacement dispatched within 2 days.",
+    "For billing disputes, the finance team requires the order ID and bank transaction reference.",
 ]
 
-_index = None
-
-
-def _embed(texts: list[str]) -> np.ndarray:
-    """Call Groq embeddings API and return numpy array."""
-    response = client.embeddings.create(
-        model=EMBEDDING_MODEL,
-        input=texts,
+def get_embeddings(texts: list[str]) -> np.ndarray:
+    response = requests.post(
+        HF_MODEL_URL,
+        headers={"Authorization": f"Bearer {HF_API_KEY}"},
+        json={"inputs": texts, "options": {"wait_for_model": True}},
     )
-    return np.array([item.embedding for item in response.data], dtype=np.float32)
+    response.raise_for_status()
+    return np.array(response.json(), dtype="float32")
 
+def build_index() -> faiss.IndexFlatL2:
+    embeddings = get_embeddings(KNOWLEDGE_BASE)
+    index = faiss.IndexFlatL2(embeddings.shape[1])
+    index.add(embeddings)
+    return index
 
-def _get_index() -> faiss.IndexFlatL2:
-    """Build FAISS index on first use."""
-    global _index
-    if _index is None:
-        kb_embeddings = _embed(Knowledge_Base)
-        _index = faiss.IndexFlatL2(kb_embeddings.shape[1])
-        _index.add(kb_embeddings)
-    return _index
-
+index = build_index()
 
 def retrieve_context(query: str, top_k: int = 3) -> list[str]:
-    index = _get_index()
-    query_vec = _embed([query])
-    distances, indices = index.search(query_vec, top_k)
-    return [Knowledge_Base[i] for i in indices[0] if i < len(Knowledge_Base)]
+    query_vec = get_embeddings([query])
+    _, indices = index.search(query_vec, top_k)
+    return [KNOWLEDGE_BASE[i] for i in indices[0] if i < len(KNOWLEDGE_BASE)]
+
+def answer(query: str) -> str:
+    context = "\n".join(f"- {c}" for c in retrieve_context(query))
+    response = groq_client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a helpful customer support assistant. "
+                    "Answer ONLY using the context below. "
+                    "If the answer isn't there, say you don't know.\n\n"
+                    f"Context:\n{context}"
+                ),
+            },
+            {"role": "user", "content": query},
+        ],
+    )
+    return response.choices[0].message.content
