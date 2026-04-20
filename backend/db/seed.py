@@ -12,5 +12,4 @@ async def seed():
         print("Roles seeded successfully")
 
 
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 asyncio.run(seed())

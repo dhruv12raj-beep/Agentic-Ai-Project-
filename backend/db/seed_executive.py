@@ -16,5 +16,4 @@ async def seed():
         await session.commit()
         print("Executives seeded successfully")
 
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 asyncio.run(seed())

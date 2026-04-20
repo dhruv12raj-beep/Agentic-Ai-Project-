@@ -2,6 +2,7 @@ import json
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.messages import TextMessage
 from autogen_ext.models.openai import OpenAIChatCompletionClient
+from autogen_core import CancellationToken  
 from db.mongo import conversation_logs
 from db.mongo_schemas import ConversationEntry, EscalationEntry
 from agents.rag import retrieve_context
@@ -92,7 +93,7 @@ Relevant knowledge base context:
 
     response = await agent.on_messages(
         [TextMessage(content=user_message, source="user")],
-        cancellation_token=None
+        cancellation_token=CancellationToken()
     )
 
     raw_response = response.chat_message.content
@@ -100,7 +101,13 @@ Relevant knowledge base context:
 
     # Step 4 — parse agent decision
     try:
-        decision = json.loads(raw_response)
+        # ✅ FIX: strip markdown fences if model wraps response in ```json ... ```
+        cleaned = raw_response.strip()
+        if cleaned.startswith("```"):
+            cleaned = cleaned.split("```")[1]
+            if cleaned.startswith("json"):
+                cleaned = cleaned[4:]
+        decision = json.loads(cleaned.strip())
     except json.JSONDecodeError:
         decision = {
             "category": "general",
@@ -109,7 +116,7 @@ Relevant knowledge base context:
             "resolution": None,
             "escalation_reason": "Agent response could not be parsed. Manual review required."
         }
-
+ 
     category = decision.get("category", "general")
     priority = decision.get("priority", "medium")
     can_resolve = decision.get("can_resolve", False)

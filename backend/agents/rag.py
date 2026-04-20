@@ -1,8 +1,12 @@
-from sentence_transformers import SentenceTransformer
-import faiss
 import numpy as np
+import faiss
+from groq import Groq
+from config import GROQ_API_KEY
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+
+client = Groq(api_key=GROQ_API_KEY)
+
+EMBEDDING_MODEL = "nomic-embed-text-v1_5"  
 
 Knowledge_Base = [
     "If a payment was deducted but the order failed, the amount is automatically refunded within 5-7 business days. Customer should check their bank statement.",
@@ -15,17 +19,32 @@ Knowledge_Base = [
     "Product return requests must be raised within 7 days of delivery. The item must be unused and in original packaging.",
     "If the wrong item was delivered, the customer should raise a ticket with a photo. Replacement is dispatched within 2 days.",
     "For billing disputes, the finance team requires the order ID and bank transaction reference to investigate.",
-] 
+]
 
-def build_index():
-    embeddings = model.encode(Knowledge_Base, convert_to_numpy=True)
-    index = faiss.IndexFlatL2(embeddings.shape[1])
-    index.add(embeddings)
-    return index 
+_index = None
 
-index = build_index()
 
-def retrieve_context(query: str , top_k : int =3)-> list[str]:
-    query_vec = model.encode([query], convert_to_numpy=True)
+def _embed(texts: list[str]) -> np.ndarray:
+    """Call Groq embeddings API and return numpy array."""
+    response = client.embeddings.create(
+        model=EMBEDDING_MODEL,
+        input=texts,
+    )
+    return np.array([item.embedding for item in response.data], dtype=np.float32)
+
+
+def _get_index() -> faiss.IndexFlatL2:
+    """Build FAISS index on first use."""
+    global _index
+    if _index is None:
+        kb_embeddings = _embed(Knowledge_Base)
+        _index = faiss.IndexFlatL2(kb_embeddings.shape[1])
+        _index.add(kb_embeddings)
+    return _index
+
+
+def retrieve_context(query: str, top_k: int = 3) -> list[str]:
+    index = _get_index()
+    query_vec = _embed([query])
     distances, indices = index.search(query_vec, top_k)
     return [Knowledge_Base[i] for i in indices[0] if i < len(Knowledge_Base)]

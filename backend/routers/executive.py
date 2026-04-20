@@ -28,10 +28,7 @@ async def get_executive_profile(
 async def get_all_tickets(
     current_executive: Executive = Depends(get_current_executive)
 ):
-    cursor = conversation_logs.find(
-        {},
-        sort=[("created_at", -1)]
-    )
+    cursor = conversation_logs.find({}).sort("created_at", -1)
     tickets = await cursor.to_list(length=500)
     return tickets
 

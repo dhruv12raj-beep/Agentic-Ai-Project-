@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException , BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from db.mongo import conversation_logs
 from db.mongo_schemas import TicketCreate, TicketDocument, TicketResponse
 from auth.dependencies import get_current_user, get_current_executive
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/tickets", tags=["Tickets"])
 @router.post("/", response_model=TicketResponse)
 async def create_ticket(
     data: TicketCreate,
-    background_tasks : BackgroundTasks,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user)
 ):
     ticket = TicketDocument(
@@ -41,9 +41,8 @@ async def get_my_tickets(
     current_user: User = Depends(get_current_user)
 ):
     cursor = conversation_logs.find(
-        {"customer_id": str(current_user.id)},
-        sort=[("created_at", -1)]
-    )
+        {"customer_id": str(current_user.id)}
+    ).sort("created_at", -1)
     tickets = await cursor.to_list(length=100)
     return tickets
 
@@ -52,10 +51,7 @@ async def get_my_tickets(
 async def get_all_tickets(
     current_executive: Executive = Depends(get_current_executive)
 ):
-    cursor = conversation_logs.find(
-        {},
-        sort=[("created_at", -1)]
-    )
+    cursor = conversation_logs.find({}).sort("created_at", -1)
     tickets = await cursor.to_list(length=500)
     return tickets
 
